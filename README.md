@@ -65,7 +65,7 @@ team-tasks-ai/
 ## Getting Started
 ### **1. Clone the repository:**
 ```bash
-git clone https://github.com/Ismailab1/TeamTasksAI.git
+git clone https://github.com/Ismailab1/team-tasks-ai.git
 cd team-tasks-ai
 ```
 
