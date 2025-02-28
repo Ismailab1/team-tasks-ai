@@ -32,7 +32,7 @@ backend/
 ## Getting Started
 ### **1. Clone the repository:**
 ```bash
-git clone https://github.com/Ismailab1/team-tasks-ai.git
+git clone https://github.com/YOUR_USERNAME/TeamTasksAI.git
 cd backend
 ```
 
@@ -59,8 +59,29 @@ npm start
 |--------|---------|-------------|
 | `POST` | `/api/auth/register` | Register a new user |
 | `POST` | `/api/team/create` | Create a new team |
-| `POST` | `/api/task/add` | Add a task to a team |
+| `POST` | `/api/task/add` | Add a task to a team with multiple assignees |
+| `PUT`  | `/api/task/update/:task_id` | Update a task, including multiple assignees |
+| `GET`  | `/api/task/list/:team_id` | Get all tasks for a team |
+| `DELETE` | `/api/task/delete/:task_id` | Delete a task |
 | `POST` | `/api/checkin/submit` | Submit a check-in |
+
+### **Task API Changes**
+- **Task Creation (`/api/task/add`)**: Now accepts an array of `assigned_to` user IDs.
+- **Task Update (`/api/task/update/:task_id`)**: Allows modifying `assigned_to` to add or remove assignees.
+- **Task Retrieval (`/api/task/list/:team_id`)**: Returns tasks with multiple assignees in an array.
+
+#### **Example Payload for Creating a Task with Multiple Assignees:**
+```json
+{
+  "team_id": "team123",
+  "title": "Build Check-In API",
+  "description": "Develop the AI-powered check-in system",
+  "assigned_to": ["abc123", "def456"],
+  "status": "In Progress",
+  "priority": "High",
+  "due_date": "2024-03-05"
+}
+```
 
 ## Deployment
 - Deploy backend to **Azure App Service** or **Azure Functions**
