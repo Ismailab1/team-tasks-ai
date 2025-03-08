@@ -8,8 +8,6 @@ import "./index.css";
 createRoot(document.getElementById("root")!).render(
 	<StrictMode>
 		<Provider store={store}>
-			{" "}
-			{/* Wrap your app in Provider */}
 			<App />
 		</Provider>
 	</StrictMode>,

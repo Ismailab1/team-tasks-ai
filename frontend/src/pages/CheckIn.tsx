@@ -1,4 +1,3 @@
-import React from "react";
 import { Mic, Book, Clock, ArrowUpCircle } from "lucide-react";
 
 function CheckIn() {

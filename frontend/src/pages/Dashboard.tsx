@@ -1,5 +1,4 @@
-import React from "react";
-import { Users, Plus, Link as LinkIcon, Settings, User } from "lucide-react";
+import { Users, Plus, Link as LinkIcon, User } from "lucide-react";
 
 function Dashboard() {
 	return (

@@ -1,4 +1,3 @@
-import React from "react";
 import { Book, Send, History } from "lucide-react";
 
 function Tasks() {
