@@ -12,7 +12,13 @@
   "dependencies": {
     "@azure/arm-storage": "^18.4.0",
     "@azure/storage-blob": "^12.26.0",
-    "dotenv": "^16.4.7"
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2"
   },
-  "keywords": []
+  "keywords": [],
+  "devDependencies": {
+    "mocha": "^11.1.0",
+    "should": "^13.2.3",
+    "supertest": "^7.0.0"
+  }
 }
