@@ -1,0 +1,34 @@
+Hello frends
+
+the following files are in need of improvements, 
+and will be part of our production backend
+
+    1. apiv1.js [version to be updated]
+        This file needs to be brought up to standards outlined in
+        GitHub issue 31 https://github.com/Ismailab1/team-tasks-ai/issues/31
+    2. cosmos0-1.js [version to be updated]
+        This file needs:
+            a. better error handling
+            b. data cleaning/validation (i.e., if user enters incorrect
+            data we should tell them to fix it before we waste CosmosDB
+            queries)
+            c. The "Unique" IDs are not truly unique currently, we will
+            need to check which IDs exist already to ensure we do not create 
+            duplicates
+
+The following scripts are for "testing" (im bad at devops)
+    1. apiTest.js: script to test apiv1, run with the command
+        npx mocha apiTest.js
+    We're using the mocha testing framework
+    https://mochajs.org/
+
+    2. cosmosDriver.js: script to execute commands from the cosmos0-1 file
+    This was used by myself to populate our existing DB with users & tasks
+    running it now won't update our DB (the data is already there
+    and the primary key will prevent duplicates) but might count towards
+    our RCUs (money money money $$$)
+
+Our data is in the file dummyData.json
+I've been using ChatGPT to add to this collection, I would just add the file
+to the chat and see what it comes up with
+
