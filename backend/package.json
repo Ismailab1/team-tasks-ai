@@ -1,24 +1,35 @@
 {
   "name": "backend",
   "version": "1.0.0",
-  "description": "backend for Azure Hackathon",
-  "main": "server.js",
+  "description": "Backend for Microsoft Azure AI Team Tasks App",
+  "main": "appv1.js",
   "scripts": {
-    "test": "gimmeData",
-    "start": "node server.js"
+    "start": "node appv1.js",
+    "test": "jest",
+    "test:watch": "jest --watchAll"
   },
   "author": "Daniel Gilmore",
   "license": "MIT",
   "dependencies": {
     "@azure/arm-storage": "^18.4.0",
     "@azure/storage-blob": "^12.26.0",
-    "dotenv": "^16.4.7",
-    "express": "^4.21.2"
+    "axios": "^1.8.3",
+    "bcrypt": "^5.1.1",
+    "jsonwebtoken": "^9.0.2",
+    "lda": "^0.2.0",
+    "multer": "^1.4.5-lts.1",
+    "natural": "^8.0.1",
+    "openai": "^4.87.3",
+    "socket.io": "^4.8.1"
   },
   "keywords": [],
   "devDependencies": {
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "jest": "^29.7.0",
     "mocha": "^11.1.0",
     "should": "^13.2.3",
-    "supertest": "^7.0.0"
+    "supertest": "^7.0.0",
+    "uuid": "^11.1.0"
   }
 }
