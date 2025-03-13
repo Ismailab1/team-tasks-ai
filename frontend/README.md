@@ -64,5 +64,9 @@ const fetchTasks = async () => {
 This project is licensed under the **Apache 2.0**.
 
 ## Contributors
-- **Your Name** (@ismailab1) - Project Lead
-- Looking for **Frontend, Backend, UI/UX, and AI Engineers!**
+- **Ismail Abdullah** (@ismailab1) - Project Lead
+- **Name** (@githubUsername) - Frontend
+- **Name** (@githubUsername) - Frontend
+- **Name** (@githubUsername) - Backend
+- **Name** (@githubUsername) - UI/UX
+- **Name** (@githubUsername) - Project Management

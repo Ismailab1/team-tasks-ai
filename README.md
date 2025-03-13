@@ -102,12 +102,24 @@ npm run dev
 |--------|---------|-------------|
 | `POST` | `/api/auth/register` | Register a new user |
 | `POST` | `/api/team/create` | Create a new team |
-| `POST` | `/api/task/add` | Add a task to a team |
+| `POST` | `/api/task/add` | Add a task to a team with multiple assignees |
+| `PUT`  | `/api/task/update/:task_id` | Update a task, including multiple assignees |
+| `GET`  | `/api/task/list/:team_id` | Get all tasks for a team |
+| `DELETE` | `/api/task/delete/:task_id` | Delete a task |
 | `POST` | `/api/checkin/submit` | Submit a check-in |
+
+### **Task API Changes**
+- **Task Creation (`/api/task/add`)**: Now accepts an array of `assigned_to` user IDs.
+- **Task Update (`/api/task/update/:task_id`)**: Allows modifying `assigned_to` to add or remove assignees.
+- **Task Retrieval (`/api/task/list/:team_id`)**: Returns tasks with multiple assignees in an array.
 
 ## License
 This project is licensed under the **Apache 2.0**.
 
 ## Contributors
-- **Your Name** (@ismailab1) - Project Lead
-- Looking for **Frontend, Backend, UI/UX, and AI Engineers!**
+- **Ismail Abdullah** (@ismailab1) - Project Lead
+- **Name** (@githubUsername) - Frontend
+- **Name** (@githubUsername) - Frontend
+- **Name** (@githubUsername) - Backend
+- **Name** (@githubUsername) - UI/UX
+- **Name** (@githubUsername) - Project Management
