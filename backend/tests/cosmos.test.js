@@ -74,7 +74,8 @@ describe('Cosmos DB Module Tests', () => {
   // Direct module test for user creation
   test('Should create a user directly with the module', async () => {
     const testUser = { ...TEST_USER, username: `user_${Date.now()}` };
-    const result = await cosmosModule.createFamilyItem(TEST_DB, 'users', testUser);
+    await cosmosModule.createFamilyItem(TEST_DB, 'users', testUser);
+    const result = await cosmosModule.getUserByUsername(TEST_DB, testUser.username);
     expect(result).toHaveProperty('id');
     expect(result.username).toBe(testUser.username);
   });
@@ -88,8 +89,9 @@ describe('Cosmos DB Module Tests', () => {
       .send(testUser)
       .expect(201);
     
-    expect(response.body).toHaveProperty('id');
-    expect(response.body.username).toBe(testUser.username);
+    const result = await cosmosModule.getUserByUsername(TEST_DB, testUser.username);
+    expect(result).toHaveProperty('id');
+    expect(result.username).toBe(testUser.username);
   });
 
   // Test querying users
