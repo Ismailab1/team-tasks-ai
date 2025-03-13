@@ -45,12 +45,13 @@ require('dotenv').config();
       id: 'test_task_001',
       teamId: 'team_test_001',
       title: 'Test task from Cosmos test script',
-    });
+      createdAt: new Date().toISOString() // Explicitly ensure this property is added
+    });    
     console.log('Task created:', task);
 
     // 6. Test tasksByCreatedDate
     console.log('Retrieving tasks...');
-    const tasks = await cosmosModule.tasksByCreatedDate(dbName, 'team_test_001');
+    const tasks = await cosmosModule.tasksByCreatedDate(dbName, 'tasks', 'team_test_001');
     console.log('Tasks retrieved:', tasks);
 
     // 7. Test getUserTasks

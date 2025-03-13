@@ -34,10 +34,11 @@ app.get('/test-cosmos-query', async (req, res) => {
 // Create user route for testing
 app.post('/test-create-user', async (req, res) => {
   try {
-    const newUser = { ...TEST_USER, ...req.body };
-    const result = await cosmosModule.createFamilyItem(TEST_DB, 'users', newUser);
-    res.status(201).json(result);
+    const user = req.body;
+    const { resource: createdUser } = await cosmosModule.createFamilyItem(TEST_DB, 'users', user);
+    res.status(201).json(createdUser); // Send just the resource data
   } catch (error) {
+    console.error("Error creating user via API:", error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -77,6 +78,7 @@ describe('Cosmos DB Module Tests', () => {
     expect(result).toHaveProperty('id');
     expect(result.username).toBe(testUser.username);
   });
+  
 
   // API test for user creation using Supertest
   test('Should create a user via API endpoint', async () => {

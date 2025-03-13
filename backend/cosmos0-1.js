@@ -67,7 +67,7 @@ async function initializeDatabase(db_id) {
     await createContainer(db_id, 'teams', '/id');
     await createContainer(db_id, 'tasks', '/teamId');
     await createContainer(db_id, 'chatLogs', '/conversationId');
-    await createContainer(db_id, 'checkins', '/userId');
+    await createContainer(db_id, 'checkins', '/teamId');
     await createContainer(db_id, 'reports', '/teamId');
     
     console.log(`Database ${db_id} and all required containers initialized.`);
@@ -181,19 +181,23 @@ async function createFamilyItem(databaseId, containerId, itemBody) {
 async function tasksByCreatedDate(db_id, cont_id, team_id) {
   try {
     const container = client.database(db_id).container(cont_id);
-    const q = `SELECT * FROM c WHERE c.teamId = @teamId ORDER BY c.createdAt ASC`;
-    const qspec = {
-      query: q,
+    const querySpec = {
+      query: 'SELECT * FROM c WHERE c.teamId = @teamId ORDER BY c.createdAt ASC',
       parameters: [{ name: '@teamId', value: team_id }]
     };
 
-    const { resources: items } = await container.items.query(qspec).fetchAll();
+    const { resources: items } = await container.items
+      .query(querySpec, { partitionKey: team_id })
+      .fetchAll();
+
     return items;
   } catch (error) {
     console.error('Error fetching tasks by created date:', error.message);
     throw error;
   }
 }
+
+
 
 /**
  * getItemById(databaseId, containerId, itemId, partitionKey = null)
