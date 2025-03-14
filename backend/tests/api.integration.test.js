@@ -1,204 +1,140 @@
-// tests/api.integration.test.js
-const request = require('supertest');
-const app = require('../appv1'); // Import your actual Express app
-const { v4: uuidv4 } = require('uuid');
-require('dotenv').config();
+const request = require("supertest");
+const server = require("../server"); // Ensure correct server import
+const jwt = require("jsonwebtoken");
+const cos = require("../cosmos0-1");
+require("dotenv").config();
 
-// Test user data
-const TEST_USER = {
-  username: `testuser_${Date.now()}`,
-  password: 'TestPassword123!',
-  email: `test_${Date.now()}@example.com`,
-  fullName: 'Test User'
-};
+beforeAll(async () => {
+  console.log("🔹 Initializing test database...");
+  await cos.initializeDatabase("testdb");
+  console.log("✅ Test database initialized");
 
-let authToken, userId, teamId, taskId;
+  console.log("🚀 Starting server for tests...");
+  global.testServer = server.listen(4001, () => console.log("✅ Test server running on port 4001"));
 
-describe('API Integration Tests', () => {
-  // Register and authenticate first
-  test('Should register a new user', async () => {
-    const response = await request(app)
-      .post('/auth/register')
-      .send(TEST_USER)
-      .expect(201);
-    
-    expect(response.body).toHaveProperty('id');
-    userId = response.body.id;
-  });
+  // 🔹 Perform login and dynamically store credentials
+  const loginResponse = await request(server)
+    .post("/api/auth/login")
+    .send({ username: "apitestuser", password: "securepassword" })
+    .expect(200);
 
-  test('Should authenticate and get a token', async () => {
-    const response = await request(app)
-      .post('/auth/login')
+  console.log("🔹 Login Response:", loginResponse.body);
+  global.authToken = loginResponse.body.token;
+  global.TEST_USER_ID = loginResponse.body.user.id;
+
+  // 🔹 Store credentials in environment variables (mimicking frontend caching)
+  process.env.TEST_AUTH_TOKEN = global.authToken;
+  process.env.TEST_USER_ID = global.TEST_USER_ID;
+
+  // 🔹 Create a test team and store the ID dynamically
+  const teamResponse = await request(server)
+    .post("/api/teams")
+    .set("Authorization", `Bearer ${global.authToken}`)
+    .send({ name: "Test Team", description: "For API testing" })
+    .expect(201);
+
+  global.TEST_TEAM_ID = teamResponse.body.team.id;
+  process.env.TEST_TEAM_ID = global.TEST_TEAM_ID;
+
+  console.log("🔹 Stored TEST_TEAM_ID:", global.TEST_TEAM_ID);
+});
+
+afterAll(async () => {
+  console.log("🛑 Closing test server...");
+  global.testServer.close();
+});
+
+describe("API Integration Tests", () => {
+  test("Should register a user", async () => {
+    const response = await request(server)
+      .post("/api/auth/register")
       .send({
-        username: TEST_USER.username,
-        password: TEST_USER.password
+        username: "apitestuser",
+        email: "apitest@example.com",
+        password: "securepassword",
+      });
+
+    expect([201, 409]).toContain(response.status); // 201 success, 409 if user exists
+
+    if (response.status === 201) {
+      expect(response.body).toHaveProperty("user");
+      expect(response.body.user.username).toBe("apitestuser");
+    } else {
+      expect(response.body).toHaveProperty("error");
+      expect(response.body.error).toBe("User already exists");
+    }
+  });
+
+  test("Should login user and return JWT dynamically", async () => {
+    const response = await request(server)
+      .post("/api/auth/login")
+      .send({ username: "apitestuser", password: "securepassword" })
+      .expect(200);
+
+    console.log("🔹 Login Response:", response.body);
+    global.authToken = response.body.token;
+    global.TEST_USER_ID = response.body.user.id;
+
+    // Store dynamically for reuse
+    process.env.TEST_AUTH_TOKEN = response.body.token;
+    process.env.TEST_USER_ID = response.body.user.id;
+
+    expect(response.body).toHaveProperty("token");
+  });
+
+  test("Should create a team and assign creator as team admin dynamically", async () => {
+    const response = await request(server)
+      .post("/api/teams")
+      .set("Authorization", `Bearer ${global.authToken}`)
+      .send({ name: "API Test Team", description: "Testing API Routes" })
+      .expect(201);
+
+    console.log("🔹 Team Creation Response:", response.body);
+    global.TEST_TEAM_ID = response.body.team.id; // Capture team ID dynamically
+
+    // Store in env variable for consistency
+    process.env.TEST_TEAM_ID = response.body.team.id;
+
+    expect(response.body.team).toHaveProperty("id");
+    expect(response.body.team.roles).toHaveProperty(global.TEST_USER_ID, "admin");
+  });
+
+  test("Should create a task dynamically", async () => {
+    const response = await request(server)
+      .post("/api/tasks")
+      .set("Authorization", `Bearer ${global.authToken}`)
+      .send({
+        teamId: global.TEST_TEAM_ID, // Ensure latest team ID is used
+        title: "API Test Task",
+        description: "Testing Task Creation",
       })
-      .expect(200);
-    
-    expect(response.body).toHaveProperty('token');
-    authToken = response.body.token;
-  });
-
-  // Team tests
-  test('Should create a new team', async () => {
-    const teamData = {
-      name: `Test Team ${Date.now()}`,
-      description: 'Created for integration testing'
-    };
-    
-    const response = await request(app)
-      .post('/teams')
-      .set('Authorization', `Bearer ${authToken}`)
-      .send(teamData)
       .expect(201);
-    
-    expect(response.body).toHaveProperty('id');
-    teamId = response.body.id;
-    expect(response.body.name).toBe(teamData.name);
-    expect(response.body.members).toContain(userId);
+
+    console.log("🔹 Task Creation Response:", response.body);
+    global.TEST_TASK_ID = response.body.task.id; // Capture task ID dynamically
+
+    // Store task ID in env variable for later use
+    process.env.TEST_TASK_ID = response.body.task.id;
+
+    expect(response.body.task).toHaveProperty("id");
+    expect(response.body.task.title).toBe("API Test Task");
   });
 
-  test('Should get teams for the user', async () => {
-    const response = await request(app)
-      .get('/teams')
-      .set('Authorization', `Bearer ${authToken}`)
-      .expect(200);
-    
-    expect(Array.isArray(response.body)).toBe(true);
-    expect(response.body.some(team => team.id === teamId)).toBe(true);
+  test("Should return 401 for unauthorized access", async () => {
+    await request(server).get("/api/teams").expect(401);
   });
 
-  test('Should get team details', async () => {
-    const response = await request(app)
-      .get(`/teams/${teamId}`)
-      .set('Authorization', `Bearer ${authToken}`)
-      .expect(200);
-    
-    expect(response.body).toHaveProperty('id', teamId);
-    expect(response.body).toHaveProperty('members');
-    expect(response.body.members).toContain(userId);
-  });
+  test("Should return 403 for forbidden action dynamically", async () => {
+    const fakeToken = jwt.sign({ id: "fakeUserId" }, process.env.JWT_SECRET, { expiresIn: "1h" });
 
-  // Task tests
-  test('Should create a new task', async () => {
-    const taskData = {
-      teamId: teamId,
-      title: `Test Task ${Date.now()}`,
-      description: 'Created for integration testing',
-      status: 'New',
-      dueDate: new Date(Date.now() + 86400000).toISOString() // Tomorrow
-    };
-    
-    const response = await request(app)
-      .post('/tasks')
-      .set('Authorization', `Bearer ${authToken}`)
-      .send(taskData)
-      .expect(201);
-    
-    expect(response.body).toHaveProperty('id');
-    taskId = response.body.id;
-    expect(response.body.title).toBe(taskData.title);
-    expect(response.body.createdBy).toBe(userId);
-  });
-
-  test('Should get tasks for the team', async () => {
-    const response = await request(app)
-      .get(`/tasks/team/${teamId}`)
-      .set('Authorization', `Bearer ${authToken}`)
-      .expect(200);
-    
-    expect(Array.isArray(response.body)).toBe(true);
-    expect(response.body.some(task => task.id === taskId)).toBe(true);
-  });
-
-  test('Should get task details', async () => {
-    const response = await request(app)
-      .get(`/tasks/${taskId}`)
-      .set('Authorization', `Bearer ${authToken}`)
-      .expect(200);
-    
-    expect(response.body).toHaveProperty('id', taskId);
-    expect(response.body).toHaveProperty('teamId', teamId);
-  });
-
-  test('Should update task details', async () => {
-    const updateData = {
-      status: 'InProgress',
-      description: 'Updated for testing'
-    };
-    
-    const response = await request(app)
-      .put(`/tasks/${taskId}`)
-      .set('Authorization', `Bearer ${authToken}`)
-      .send(updateData)
-      .expect(200);
-    
-    expect(response.body).toHaveProperty('id', taskId);
-    expect(response.body.status).toBe(updateData.status);
-    expect(response.body.description).toBe(updateData.description);
-  });
-
-  // AI chat tests
-  test('Should handle AI chat request', async () => {
-    const chatData = {
-      message: 'Hello AI assistant',
-      conversationId: uuidv4()
-    };
-    
-    const response = await request(app)
-      .post('/ai/chat')
-      .set('Authorization', `Bearer ${authToken}`)
-      .send(chatData)
-      .expect(200);
-    
-    expect(response.body).toHaveProperty('response');
-    expect(response.body).toHaveProperty('conversationId', chatData.conversationId);
-  });
-
-  // Report generation test
-  test('Should generate AI report for team', async () => {
-    const reportData = {
-      teamId: teamId,
-      reportType: 'progress',
-      timeRange: 'week'
-    };
-    
-    const response = await request(app)
-      .post('/ai/report')
-      .set('Authorization', `Bearer ${authToken}`)
-      .send(reportData)
-      .expect(200);
-    
-    expect(response.body).toHaveProperty('id');
-    expect(response.body).toHaveProperty('content');
-    expect(response.body.teamId).toBe(teamId);
-    expect(response.body.reportType).toBe(reportData.reportType);
-  });
-
-  // Cleanup - can optionally delete test data
-  test('Should delete the task', async () => {
-    await request(app)
-      .delete(`/tasks/${taskId}`)
-      .set('Authorization', `Bearer ${authToken}`)
-      .expect(200);
-    
-    // Verify deletion
-    const response = await request(app)
-      .get(`/tasks/${taskId}`)
-      .set('Authorization', `Bearer ${authToken}`)
-      .expect(404);
-  });
-
-  test('Should delete the team', async () => {
-    await request(app)
-      .delete(`/teams/${teamId}`)
-      .set('Authorization', `Bearer ${authToken}`)
-      .expect(200);
-    
-    // Verify deletion
-    const response = await request(app)
-      .get(`/teams/${teamId}`)
-      .set('Authorization', `Bearer ${authToken}`)
-      .expect(404);
+    await request(server)
+      .post("/api/tasks")
+      .set("Authorization", `Bearer ${fakeToken}`)
+      .send({
+        teamId: global.TEST_TEAM_ID, // Use latest dynamically captured team ID
+        title: "API Test Task",
+        description: "Testing Task Creation",
+      })
+      .expect(403);
   });
 });

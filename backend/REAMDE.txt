@@ -26,9 +26,203 @@ The following scripts are for "testing" (im bad at devops)
     This was used by myself to populate our existing DB with users & tasks
     running it now won't update our DB (the data is already there
     and the primary key will prevent duplicates) but might count towards
-    our RCUs (money money money $$$)
+    our RCUs (money money money $$$) 
+    (Addendum: So far, I have not been charged for any of the CosmosDB usage, 
+    but I am not sure if this is because of the free tier or 
+    because I have not used it enough to be charged. I will keep you all updated.)
 
 Our data is in the file dummyData.json
 I've been using ChatGPT to add to this collection, I would just add the file
 to the chat and see what it comes up with
+
+# Addendum: API, AI, and Database Testing
+
+## Overview
+This document provides details on running integration tests for the Team Tasks AI backend. The tests cover Cosmos DB operations, authentication, team and task management, AI chat functionalities, and structured check-ins.
+
+## How to Run the Tests
+### Prerequisites
+Ensure you have Node.js installed along with the required dependencies:
+```
+npm install
+```
+
+Setting Up Azure CLI
+
+To interact with Azure resources, you need to set up Azure CLI:
+
+Install Azure CLI:
+
+Download and install Azure CLI from: https://aka.ms/installazurecliwindows (for Windows) or https://aka.ms/installazurecli (for macOS/Linux)
+
+Login to Azure:
+Run the following command and follow the authentication prompts (You may have to restart your terminal instance or your entire visial studio before this works):
+```
+az login
+```
+This will open a browser window for you to sign in. (I will send you all your shared Entra ID for my default directory for the EXPLICIT purpose of accessing the Cosmos database adn making adjustments to the AI if needed.)
+
+Set Your Subscription:
+If you have multiple subscriptions, list them with (use Azure Subscription 1):
+```
+az account list --output table
+```
+Set the desired subscription using:
+```
+az account set --subscription "<subscription-id>"
+```
+Ensure Azure CLI Can Connect to Cosmos DB
+
+Retrieve Cosmos DB account details:
+```
+az cosmosdb list --resource-group <RESOURCE_GROUP>
+```
+Verify connection:
+```
+az cosmosdb show --name <COSMOS_DB_NAME> --resource-group <RESOURCE_GROUP>
+```
+Check database keys (for local access):
+```
+az cosmosdb keys list --name <COSMOS_DB_NAME> --resource-group <RESOURCE_GROUP> --type keys
+```
+Verify Azure CLI Setup:
+Ensure everything is configured correctly by running:
+```
+az account show
+```
+This should display your active subscription details.
+
+### Running Tests
+Start the Backend Server:
+```
+cd backend
+node server.js 
+```
+or 
+```
+npm start
+```
+To execute all tests, run:
+```
+npm test
+```
+To run specific tests, use:
+```
+npm test -- cosmos.integration.test.js
+```
+or
+```
+npm test -- api.integration.test.js
+```
+or
+```
+npm test -- ai.integration.test.js
+```
+
+## Test Cases
+### Cosmos DB Module Tests
+1. **Database Initialization**
+   - Ensures all required containers (`users`, `teams`, `tasks`, `chatLogs`, `checkins`, `reports`) are created.
+   
+2. **User Creation and Retrieval**
+   - Creates a user and verifies retrieval by username.
+   
+3. **User API Creation**
+   - Ensures user creation via API works correctly.
+   
+4. **Team Creation and Membership Verification**
+   - Creates a team and confirms user membership.
+   
+5. **Task Management**
+   - Adds a task to a team and verifies retrieval by creation date.
+   
+6. **Conversation History**
+   - Stores and retrieves chat history.
+   
+7. **User Retrieval API**
+   - Queries the `users` container via API.
+
+### API Integration Tests
+1. **User Registration**
+   - Ensures a new user can be registered.
+   
+2. **User Login and JWT Generation**
+   - Tests login functionality and token retrieval.
+   
+3. **Team Creation and Admin Assignment**
+   - Creates a team and verifies the creator is an admin.
+   
+4. **Task Creation**
+   - Tests task creation and verifies storage.
+   
+5. **Unauthorized Access (401 Error)**
+   - Ensures unauthenticated requests are rejected.
+   
+6. **Forbidden Action (403 Error)**
+   - Confirms unauthorized users cannot access restricted routes.
+
+### AI API Integration Tests
+1. **AI Chat Response Generation**
+   - Sends a query to the AI API and verifies response.
+   
+2. **AI Chat Continuation**
+   - Ensures conversation continuity.
+   
+3. **Structured Check-in Initiation**
+   - Starts a structured check-in session.
+   
+4. **Structured Check-in Progression**
+   - Ensures the check-in workflow continues smoothly.
+   
+5. **AI Report Generation**
+   - Tests AI-generated reports for task summaries.
+   
+6. **Unauthorized AI Chat Request (401 Error)**
+   - Ensures unauthenticated AI chat requests are rejected.
+   
+7. **Forbidden AI Chat Request (403 Error)**
+   - Confirms unauthorized users cannot access AI chat.
+
+## API Endpoints Summary
+### **Authentication API**
+- **POST /api/auth/register** - Registers a new user.
+  - **Data:** `username`, `password`, `email`
+- **POST /api/auth/login** - Logs in a user and returns a JWT token.
+  - **Data:** `username`, `password`
+
+### **Teams API**
+- **POST /api/teams** - Creates a new team.
+  - **Data:** `name`, `description`
+- **GET /api/teams** - Retrieves teams the user is a part of.
+
+### **Tasks API**
+- **POST /api/tasks** - Creates a new task.
+  - **Data:** `teamId`, `title`, `description`, `assignedTo`, `dueDate`
+- **GET /api/tasks/team/:teamId** - Retrieves tasks for a given team.
+- **GET /api/tasks/:id** - Fetches task details by ID.
+- **GET /api/tasks/file/:id** - Retrieves a task's associated file.
+
+### **AI API**
+- **POST /api/ai/chat** - Initiates or continues an AI chat conversation.
+  - **Data:** `message`, `teamId`, `taskId`, `conversationId`
+- **POST /api/ai/report** - Generates an AI report for tasks.
+  - **Data:** `teamId`, `reportType`, `timeRange`
+
+
+## Debugging Test Failures
+- **Check API Logs:**
+  If a test fails, inspect console logs for error messages.
+- **Verify Database State:**
+  Ensure Cosmos DB containers and test data are correctly initialized.
+- **Run Tests in Isolation:**
+  If a specific test fails, run it separately using:
+  ```
+  npm test -- <test file name>
+  ```
+- **Increase Jest Timeout:**
+  If long-running tests fail due to timeouts, extend Jest’s timeout setting.
+
+---
+This README serves as a guide to understanding and troubleshooting backend tests effectively.
+
 

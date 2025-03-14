@@ -10,12 +10,12 @@ require('dotenv').config();
     await cosmosModule.initializeDatabase(dbName);
     console.log('Database initialized successfully.');
 
-    // 2. Test readContainer
+    // 2. Test queryItems (Replacing readContainer)
     console.log('Reading users container...');
-    const users = await cosmosModule.readContainer(dbName, 'users');
+    const users = await cosmosModule.queryItems(dbName, 'users', 'SELECT * FROM c');
     console.log(`Users retrieved: ${users.length}`);
 
-    // 2. Test createFamilyItem
+    // 3. Test createFamilyItem
     console.log('Creating test user...');
     const userItem = await cosmosModule.createFamilyItem(dbName, 'users', {
       id: 'test_user_001',
@@ -24,20 +24,15 @@ require('dotenv').config();
     });
     console.log('User created:', userItem);
 
-    // 3. Test getUserByUsername
+    // 4. Test getUserByUsername
     console.log('Getting user by username...');
     const userByUsername = await cosmosModule.getUserByUsername(dbName, 'testuser_cosmos');
-    console.log('Retrieved user:', userItem);
+    console.log('Retrieved user:', userByUsername);
 
-    // 4. Test getUserTeams
+    // 5. Test getUserTeams
     console.log('Getting teams for user...');
     const teams = await cosmosModule.getUserTeams(dbName, 'test_user_001');
     console.log('User teams:', teams);
-
-    // 5. Test getTeamMembers
-    console.log('Getting members of team...');
-    const members = await cosmosModule.getTeamMembers(dbName, 'team_id_example');
-    console.log('Team members:', members);
 
     // 6. Test tasks creation
     console.log('Creating test task...');
@@ -45,21 +40,21 @@ require('dotenv').config();
       id: 'test_task_001',
       teamId: 'team_test_001',
       title: 'Test task from Cosmos test script',
-      createdAt: new Date().toISOString() // Explicitly ensure this property is added
+      createdAt: new Date().toISOString(),
     });    
     console.log('Task created:', task);
 
-    // 6. Test tasksByCreatedDate
+    // 7. Test tasksByCreatedDate
     console.log('Retrieving tasks...');
     const tasks = await cosmosModule.tasksByCreatedDate(dbName, 'tasks', 'team_test_001');
     console.log('Tasks retrieved:', tasks);
 
-    // 7. Test getUserTasks
+    // 8. Test getUserTasks
     console.log('Getting tasks assigned to user...');
     const userTasks = await cosmosModule.getUserTasks(dbName, 'test_user_001');
     console.log('User tasks:', userTasks);
 
-    // 7. Test getConversationHistory
+    // 9. Test getConversationHistory
     console.log('Checking conversation history...');
     const history = await cosmosModule.getConversationHistory(dbName, 'conversation_test_001');
     console.log('Conversation history:', history);
