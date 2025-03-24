@@ -465,7 +465,7 @@ router.post("/report", authenticateToken, async (req, res) => {
     console.log("📨 Generating AI report...");
     const prompt = `Generate a ${reportType} report for team "${team.name}" with the following task data:\n${JSON.stringify(taskData, null, 2)}\nTime range: ${timeRange}`;
 
-    // ✅ FIX: Use createChatCompletion instead of openai.createChatCompletion
+    
     const report = await createChatCompletion([
       { role: "system", content: "You are a helpful assistant for generating team reports." },
       { role: "user", content: prompt },
