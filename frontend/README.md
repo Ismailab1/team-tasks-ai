@@ -17,15 +17,27 @@ frontend/
 │   │── components/     # Reusable UI components
 │   │── pages/         # Page-level components (Dashboard, Check-ins, Tasks)
 │   │── hooks/         # Custom React hooks
-│   │── context/       # Global state management (Redux/Zustand)
 │   │── services/      # API calls to backend
 │   │── styles/        # TailwindCSS or custom styles
-│   │── App.js         # Main React component
-│   │── index.js       # React entry point
+│   │── App.tsx        # Main React component
+│   │── main.tsx       # React entry point
+│── store/             # Global state management (Redux)
+│   │── store.ts       # Temporary Store File (Redux)
 │── public/            # Static assets
+│── node_modules/      # Installed Modules
+│── dist/              # Name of a build directory
 │── package.json       # Frontend dependencies
+│── index.html         # Root HTML file
+│── package.json       # Node.js Configuration
+│── package-lock.json  # Dependency Lock (Consistency)
+│── postcss.config.js  # Configure postcss 
+│── eslint.config.js   # Configure eslint 
+│── vite.config.js     # Configure vite 
+│── Dockerfile         # Configures the Docker Container 
+│── docker-compose.yml # Configures docker-compose to run Docker Container 
 │── README.md          # Frontend documentation
 ```
+
 
 ## Getting Started
 ### **1. Clone the repository:** 
