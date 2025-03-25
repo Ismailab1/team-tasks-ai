@@ -23,6 +23,7 @@
     "redux": "^5.0.1"
   },
   "devDependencies": {
+    "@azure/static-web-apps-cli": "^2.0.4",
     "@biomejs/biome": "1.9.4",
     "@eslint/js": "^9.9.1",
     "@types/react": "^18.3.5",
