@@ -7,6 +7,7 @@ import Profile from "./pages/Profile";
 import Login from "./pages/Login";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { useAuth } from "./context/authContext";
+import Register from "./pages/Register";
 
 function App() {
   const { isAuthenticated, logout, user } = useAuth();
@@ -56,7 +57,9 @@ function App() {
         )}
 
         <Routes>
-          <Route path="/login" element={<Login />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        {/* ...other routes... */}
           <Route path="/" element={
             <ProtectedRoute>
               <Dashboard />
