@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import logo from '../assets/team-tasks-ai-logo.png';
 import { Link, useNavigate } from 'react-router-dom';
 import { ChevronRight, CheckCircle, AlertCircle } from 'lucide-react';
 import { useAuth } from '../context/authContext';
@@ -35,7 +36,7 @@ function Login() {
           <div>
             <img
               className="h-12 w-auto mx-auto"
-              src="/team-tasks-ai-logo.png"
+              src={logo}
               alt="Team Tasks AI Icon/Logo"
             />
             <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
