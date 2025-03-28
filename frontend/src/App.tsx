@@ -5,6 +5,7 @@ import CheckIn from "./pages/CheckIn";
 import Tasks from "./pages/Tasks";
 import Profile from "./pages/Profile";
 import Login from "./pages/Login";
+import Landing from "./pages/Landing";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { useAuth } from "./context/authContext";
 import Register from "./pages/Register";
@@ -57,9 +58,9 @@ function App() {
         )}
 
         <Routes>
+        <Route path="/" element={<Landing />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-        {/* ...other routes... */}
           <Route path="/" element={
             <ProtectedRoute>
               <Dashboard />
