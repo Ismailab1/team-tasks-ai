@@ -2,27 +2,33 @@ import React, { useState } from 'react';
 import logo from '../assets/team-tasks-ai-logo.png';
 import { Link, useNavigate } from 'react-router-dom';
 import { ChevronRight, CheckCircle, AlertCircle } from 'lucide-react';
-import { useAuth } from '../context/authContext';
+import apiClient from '../services/apiClient'; // Import the API client
+
 
 function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
-  
-  const { login } = useAuth();
+
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError('');
-    
+
     try {
-      await login(email, password);
+      const response = await apiClient.post('/api/auth/login', { email, password });
+      const { token, user } = response.data;
+
+      // Save token and user data to localStorage
+      localStorage.setItem('token', token);
+      localStorage.setItem('user', JSON.stringify(user));
+
       navigate('/');
-    } catch (error) {
-      setError(error instanceof Error ? error.message : 'Login failed. Please try again.');
+    } catch (error: any) {
+      setError(error.response?.data?.message || 'Login failed. Please try again.');
     } finally {
       setIsLoading(false);
     }

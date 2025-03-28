@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const apiClient = axios.create({
-  baseURL: '/',
+  baseURL: 'https://team-tasks-ai.azurewebsites.net/api',
   headers: {
     'Content-Type': 'application/json',
   }

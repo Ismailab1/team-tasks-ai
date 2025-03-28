@@ -1,77 +1,75 @@
-const express = require('express');
-const { authenticateToken } = require('../middlewares/auth');
-const { createChatCompletion, analyzeSentiment } = require('../services/openaiService');
-const cos = require('../cosmos0-1');
-
-const router = express.Router();
+const { app } = require('@azure/functions');
+const { authenticateToken } = require('../../../middlewares/auth');
+const { createChatCompletion } = require('../../../services/openaiService');
+const cos = require('../../../cosmos0-1');
+const crypto = require('crypto');
 
 const checkinStates = {};
 
-router.post("/chat", authenticateToken, async (req, res) => {
-  try {
-    console.log("📢 AI Chat API Called");
-    console.log("🔹 Request Body:", req.body);
+app.http('chat', {
+  methods: ['POST'],
+  authLevel: 'function',
+  handler: async (request, context) => {
+    try {
+      const user = await authenticateToken(request); // Authenticate user
+      const { message, teamId, taskId, conversationId } = await request.json();
+      const userId = user.id;
 
-    const { message, teamId, taskId, conversationId } = req.body;
-    const userId = req.user.id;
+      if (!message) {
+        context.log.warn("⚠️ Missing message in request");
+        return { status: 400, body: { error: "Message is required" } };
+      }
 
-    if (!message) {
-      console.warn("⚠️ Missing message in request");
-      return res.status(400).json({ error: "Message is required" });
+      // Check team permissions
+      const team = await cos.queryItems("testdb", "teams", `SELECT * FROM c WHERE c.id = "${teamId}"`);
+      if (!team.length) {
+        return { status: 404, body: { error: "Team not found" } };
+      }
+      if (!team[0].members.includes(userId) && team[0].createdBy !== userId) {
+        context.log.warn("⚠️ User does not have permission to chat");
+        return { status: 403, body: { error: "Forbidden: You do not have access to this team's chat." } };
+      }
+
+      const convId = conversationId || crypto.randomUUID();
+      context.log(`🔹 User ${userId} started chat in conversation ${convId}`);
+
+      // Save user message to chatLogs
+      const userLog = {
+        id: crypto.randomUUID(),
+        userId,
+        teamId,
+        taskId,
+        conversationId: convId,
+        message,
+        role: "user",
+        timestamp: Date.now()
+      };
+      await cos.createFamilyItem("testdb", "chatLogs", userLog);
+
+      // Generate AI response
+      const responseText = await createChatCompletion([
+        { role: "system", content: "You are a helpful assistant for task management." },
+        { role: "user", content: message }
+      ]);
+
+      // Save AI response to chatLogs
+      const aiLog = {
+        id: crypto.randomUUID(),
+        userId,
+        teamId,
+        taskId,
+        conversationId: convId,
+        message: responseText,
+        role: "assistant",
+        timestamp: Date.now()
+      };
+      await cos.createFamilyItem("testdb", "chatLogs", aiLog);
+
+      return { status: 200, body: { message: responseText, conversationId: convId, taskId } };
+    } catch (error) {
+      context.log.error("❌ AI Chat Error:", error);
+      return { status: 500, body: { error: "Failed to generate AI response" } };
     }
-
-    // ✅ FIX: Check if the user has permission to chat in this team
-    const team = await cos.queryItems("testdb", "teams", `SELECT * FROM c WHERE c.id = "${teamId}"`);
-    if (!team.length) {
-      return res.status(404).json({ error: "Team not found" });
-    }
-    
-    if (!team[0].members.includes(userId) && team[0].createdBy !== userId) {
-      console.warn("⚠️ User does not have permission to chat");
-      return res.status(403).json({ error: "Forbidden: You do not have access to this team's chat." });
-    }
-
-    const convId = conversationId || crypto.randomUUID();
-    console.log(`🔹 User ${userId} started chat in conversation ${convId}`);
-
-    // Save user message to chatLogs
-    const userLog = {
-      id: crypto.randomUUID(),
-      userId,
-      teamId,
-      taskId,
-      conversationId: convId,
-      message,
-      role: "user",
-      timestamp: Date.now()
-    };
-    await cos.createFamilyItem("testdb", "chatLogs", userLog);
-
-    console.log("📨 Sending message to Azure OpenAI...");
-    const responseText = await createChatCompletion([
-      { role: "system", content: "You are a helpful assistant for task management." },
-      { role: "user", content: message }
-    ]);
-
-    console.log("🔹 AI Response:", responseText);
-
-    // Save AI response to chatLogs
-    const aiLog = {
-      id: crypto.randomUUID(),
-      userId,
-      teamId,
-      taskId,
-      conversationId: convId,
-      message: responseText,
-      role: "assistant",
-      timestamp: Date.now()
-    };
-    await cos.createFamilyItem("testdb", "chatLogs", aiLog);
-
-    res.status(200).json({ message: responseText, conversationId: convId, taskId });
-  } catch (error) {
-    console.error("❌ AI Chat Error:", error);
-    res.status(500).json({ error: "Failed to generate AI response" });
   }
 });
 
