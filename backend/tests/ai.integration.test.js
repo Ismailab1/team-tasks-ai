@@ -1,22 +1,17 @@
 const request = require("supertest");
-const server = require("../server"); // Ensure correct server import
 const jwt = require("jsonwebtoken");
-const cos = require("../cosmos0-1");
 require("dotenv").config();
+
+const BASE_URL = "https://team-tasks-ai.azurewebsites.net/api"; // Azure Functions base URL
 
 let authToken, conversationId, taskId, teamId, userId;
 
 beforeAll(async () => {
-  console.log("🔹 Initializing test database...");
-  await cos.initializeDatabase("testdb");
-  console.log("✅ Test database initialized");
+  console.log("🔹 Initializing test setup...");
 
-  console.log("🚀 Starting server for tests...");
-  global.testServer = server.listen(4001, () => console.log("✅ Test server running on port 4001"));
-
-  // 🔹 Login & dynamically store credentials
-  const loginResponse = await request(server)
-    .post("/api/auth/login")
+  // 🔹 Perform login and dynamically store credentials
+  const loginResponse = await request(BASE_URL)
+    .post("/auth/login")
     .send({ username: "apitestuser", password: "securepassword" })
     .expect(200);
 
@@ -29,8 +24,8 @@ beforeAll(async () => {
   process.env.TEST_USER_ID = userId;
 
   // 🔹 Create a test team dynamically
-  const teamResponse = await request(server)
-    .post("/api/teams")
+  const teamResponse = await request(BASE_URL)
+    .post("/teams")
     .set("Authorization", `Bearer ${authToken}`)
     .send({ name: "API Test Team", description: "Testing AI Features" })
     .expect(201);
@@ -41,8 +36,8 @@ beforeAll(async () => {
   console.log("🔹 Stored TEST_TEAM_ID:", teamId);
 
   // 🔹 Create a test task dynamically
-  const taskResponse = await request(server)
-    .post("/api/tasks")
+  const taskResponse = await request(BASE_URL)
+    .post("/tasks")
     .set("Authorization", `Bearer ${authToken}`)
     .send({ teamId, title: "AI Test Task", description: "Testing AI Chat" })
     .expect(201);
@@ -53,15 +48,14 @@ beforeAll(async () => {
   console.log("🔹 Stored TEST_TASK_ID:", taskId);
 });
 
-afterAll(async () => {
-  console.log("🛑 Closing test server...");
-  global.testServer.close();
+afterAll(() => {
+  console.log("🛑 Test suite completed.");
 });
 
 describe("AI API Integration Tests", () => {
   test("Should generate an AI chat response", async () => {
-    const response = await request(server)
-      .post("/api/ai/chat")
+    const response = await request(BASE_URL)
+      .post("/ai/chat")
       .set("Authorization", `Bearer ${authToken}`)
       .send({
         message: "What tasks do I have today?",
@@ -78,8 +72,8 @@ describe("AI API Integration Tests", () => {
   });
 
   test("Should continue AI chat conversation", async () => {
-    const response = await request(server)
-      .post("/api/ai/chat")
+    const response = await request(BASE_URL)
+      .post("/ai/chat")
       .set("Authorization", `Bearer ${authToken}`)
       .send({
         message: "Can you summarize my task?",
@@ -94,8 +88,8 @@ describe("AI API Integration Tests", () => {
   });
 
   test("Should start a structured check-in session", async () => {
-    const response = await request(server)
-      .post("/api/ai/chat")
+    const response = await request(BASE_URL)
+      .post("/ai/chat")
       .set("Authorization", `Bearer ${authToken}`)
       .send({
         message: "I want to do a check-in",
@@ -111,8 +105,8 @@ describe("AI API Integration Tests", () => {
   });
 
   test("Should proceed with structured check-in", async () => {
-    const response = await request(server)
-      .post("/api/ai/chat")
+    const response = await request(BASE_URL)
+      .post("/ai/chat")
       .set("Authorization", `Bearer ${authToken}`)
       .send({
         message: "I made progress on my task",
@@ -128,9 +122,9 @@ describe("AI API Integration Tests", () => {
 
   test("Should generate an AI report", async () => {
     jest.setTimeout(15000); // Increase timeout for report generation
-    
-    const response = await request(server)
-      .post("/api/ai/report")
+
+    const response = await request(BASE_URL)
+      .post("/ai/report")
       .set("Authorization", `Bearer ${authToken}`)
       .send({
         teamId,
@@ -144,8 +138,8 @@ describe("AI API Integration Tests", () => {
   });
 
   test("Should return 401 for unauthorized AI chat", async () => {
-    await request(server)
-      .post("/api/ai/chat")
+    await request(BASE_URL)
+      .post("/ai/chat")
       .send({
         message: "This should fail",
         teamId,
@@ -157,8 +151,8 @@ describe("AI API Integration Tests", () => {
   test("Should return 403 for forbidden AI chat", async () => {
     const fakeToken = jwt.sign({ id: "fakeUserId" }, process.env.JWT_SECRET, { expiresIn: "1h" });
 
-    await request(server)
-      .post("/api/ai/chat")
+    await request(BASE_URL)
+      .post("/ai/chat")
       .set("Authorization", `Bearer ${fakeToken}`)
       .send({
         message: "Unauthorized message",

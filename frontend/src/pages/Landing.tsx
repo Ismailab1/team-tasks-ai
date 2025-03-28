@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { CheckCircle, Users, Brain, BarChart3, Shield, ArrowRight } from 'lucide-react';
 import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion';
 import logo from '../assets/team-tasks-ai-logo.png';
+import dashboard_img from '../assets/team-dashboard.png';
 
 function Landing() {
   // Scroll to top on page load
@@ -234,7 +235,7 @@ function Landing() {
                   transition={{ type: "spring", stiffness: 300 }}
                 >
                   <img 
-                    src="https://i.imgur.com/1QFmpkd.jpeg" 
+                    src={dashboard_img} 
                     alt="Team Tasks AI Dashboard" 
                     className="w-full"
                   />
